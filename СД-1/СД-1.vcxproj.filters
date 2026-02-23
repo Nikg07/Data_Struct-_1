@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LKG.c">
+    <ClCompile Include="LKG-rus.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
