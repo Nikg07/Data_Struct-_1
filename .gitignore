@@ -361,6 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+<<<<<<< HEAD
 
 # Xcode
 *.xcworkspace
@@ -381,3 +382,7 @@ xcuserdata/
 .DS_Store
 build/
 *.o
+=======
+/СД-1/input.txt
+/СД-1/output.txt
+>>>>>>> master

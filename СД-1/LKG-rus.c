@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS 1
+п»ї#define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,44 +6,44 @@
 #include <windows.h>
 
 //=============================================================================
-// СТРУКТУРЫ
+// РЎРўР РЈРљРўРЈР Р«
 
-// Структура для хранения аргументов команды get_c
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ Р°СЂРіСѓРјРµРЅС‚РѕРІ РєРѕРјР°РЅРґС‹ get_c
 typedef struct Get_C_argument {
-    unsigned long long cmin;  // нижняя граница поиска
-    unsigned long long cmax;  // верхняя граница поиска
-    unsigned long long m;     // модуль
-    int valid;                // флаг корректности аргументов
+    unsigned long long cmin;  // РЅРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р° РїРѕРёСЃРєР°
+    unsigned long long cmax;  // РІРµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р° РїРѕРёСЃРєР°
+    unsigned long long m;     // РјРѕРґСѓР»СЊ
+    int valid;                // С„Р»Р°Рі РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё Р°СЂРіСѓРјРµРЅС‚РѕРІ
 } Get_C_argument;
 
-// Структура для результата get_c
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СЂРµР·СѓР»СЊС‚Р°С‚Р° get_c
 typedef struct Get_C_result {
-    unsigned long long* numbers;  // массив найденных чисел
-    int count;                    // количество найденных чисел
-    int error;                    // код ошибки (0 - нет ошибки)
+    unsigned long long* numbers;  // РјР°СЃСЃРёРІ РЅР°Р№РґРµРЅРЅС‹С… С‡РёСЃРµР»
+    int count;                    // РєРѕР»РёС‡РµСЃС‚РІРѕ РЅР°Р№РґРµРЅРЅС‹С… С‡РёСЃРµР»
+    int error;                    // РєРѕРґ РѕС€РёР±РєРё (0 - РЅРµС‚ РѕС€РёР±РєРё)
 } Get_C_result;
 
-// Структура для хранения аргументов команды get_a
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ Р°СЂРіСѓРјРµРЅС‚РѕРІ РєРѕРјР°РЅРґС‹ get_a
 typedef struct Get_A_argument {
-    unsigned long long m;  // модуль
-    int valid;             // флаг корректности аргументов
+    unsigned long long m;  // РјРѕРґСѓР»СЊ
+    int valid;             // С„Р»Р°Рі РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё Р°СЂРіСѓРјРµРЅС‚РѕРІ
 } Get_A_argument;
 
-// Структура для хранения аргументов команды lcg
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ Р°СЂРіСѓРјРµРЅС‚РѕРІ РєРѕРјР°РЅРґС‹ lcg
 typedef struct LCG_argument {
-    unsigned long long a;   // множитель
-    unsigned long long x0;  // начальное значение
-    unsigned long long c;   // приращение
-    unsigned long long m;   // модуль
-    unsigned long long n;   // количество генерируемых чисел
-    int valid;              // флаг корректности аргументов
+    unsigned long long a;   // РјРЅРѕР¶РёС‚РµР»СЊ
+    unsigned long long x0;  // РЅР°С‡Р°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ
+    unsigned long long c;   // РїСЂРёСЂР°С‰РµРЅРёРµ
+    unsigned long long m;   // РјРѕРґСѓР»СЊ
+    unsigned long long n;   // РєРѕР»РёС‡РµСЃС‚РІРѕ РіРµРЅРµСЂРёСЂСѓРµРјС‹С… С‡РёСЃРµР»
+    int valid;              // С„Р»Р°Рі РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё Р°СЂРіСѓРјРµРЅС‚РѕРІ
 } LCG_argument;
 
 //=============================================================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// Р’РЎРџРћРњРћР“РђРўР•Р›Р¬РќР«Р• Р¤РЈРќРљР¦РР
 
 
-// Алгоритм Евклида для нахождения наибольшего общего делителя
+// РђР»РіРѕСЂРёС‚Рј Р•РІРєР»РёРґР° РґР»СЏ РЅР°С…РѕР¶РґРµРЅРёСЏ РЅР°РёР±РѕР»СЊС€РµРіРѕ РѕР±С‰РµРіРѕ РґРµР»РёС‚РµР»СЏ
 unsigned long long nod(unsigned long long a, unsigned long long b) {
     unsigned long long ostatok = a % b;
     while (ostatok) {
@@ -54,55 +54,55 @@ unsigned long long nod(unsigned long long a, unsigned long long b) {
     return b;
 }
 
-// Проверка числа на простоту
+// РџСЂРѕРІРµСЂРєР° С‡РёСЃР»Р° РЅР° РїСЂРѕСЃС‚РѕС‚Сѓ
 int is_prostoe(unsigned long long n) {
-    if (n < 2) return 0;          // числа меньше 2 не простые
-    if (n == 2) return 1;         // 2 - простое число
-    if (n % 2 == 0) return 0;     // четные числа больше 2 не простые
+    if (n < 2) return 0;          // С‡РёСЃР»Р° РјРµРЅСЊС€Рµ 2 РЅРµ РїСЂРѕСЃС‚С‹Рµ
+    if (n == 2) return 1;         // 2 - РїСЂРѕСЃС‚РѕРµ С‡РёСЃР»Рѕ
+    if (n % 2 == 0) return 0;     // С‡РµС‚РЅС‹Рµ С‡РёСЃР»Р° Р±РѕР»СЊС€Рµ 2 РЅРµ РїСЂРѕСЃС‚С‹Рµ
 
-    // Проверяем нечетные делители до корня из n
+    // РџСЂРѕРІРµСЂСЏРµРј РЅРµС‡РµС‚РЅС‹Рµ РґРµР»РёС‚РµР»Рё РґРѕ РєРѕСЂРЅСЏ РёР· n
     unsigned long long limit = (unsigned long long)sqrt(n);
     for (unsigned long long i = 3; i <= limit; i += 2) {
         if (n % i == 0) {
-            return 0;  // найден делитель - число не простое
+            return 0;  // РЅР°Р№РґРµРЅ РґРµР»РёС‚РµР»СЊ - С‡РёСЃР»Рѕ РЅРµ РїСЂРѕСЃС‚РѕРµ
         }
     }
-    return 1;  // делителей не найдено - число простое
+    return 1;  // РґРµР»РёС‚РµР»РµР№ РЅРµ РЅР°Р№РґРµРЅРѕ - С‡РёСЃР»Рѕ РїСЂРѕСЃС‚РѕРµ
 }
 
-// Нахождение всех простых делителей числа. Возвращает количество найденных делителей
+// РќР°С…РѕР¶РґРµРЅРёРµ РІСЃРµС… РїСЂРѕСЃС‚С‹С… РґРµР»РёС‚РµР»РµР№ С‡РёСЃР»Р°. Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕР»РёС‡РµСЃС‚РІРѕ РЅР°Р№РґРµРЅРЅС‹С… РґРµР»РёС‚РµР»РµР№
 int get_prime_factors(unsigned long long n, unsigned long long* factors, int max_factors) {
     int count = 0;
-    unsigned long long temp_n = n;  // рабочая копия числа
+    unsigned long long temp_n = n;  // СЂР°Р±РѕС‡Р°СЏ РєРѕРїРёСЏ С‡РёСЃР»Р°
 
-    if (n <= 1) return 0;  // у чисел <= 1 нет простых делителей
+    if (n <= 1) return 0;  // Сѓ С‡РёСЃРµР» <= 1 РЅРµС‚ РїСЂРѕСЃС‚С‹С… РґРµР»РёС‚РµР»РµР№
 
-    // Обработка делителя 2
+    // РћР±СЂР°Р±РѕС‚РєР° РґРµР»РёС‚РµР»СЏ 2
     if (temp_n % 2 == 0) {
         if (count < max_factors) {
-            factors[count++] = 2;  // 2 всегда простое число
+            factors[count++] = 2;  // 2 РІСЃРµРіРґР° РїСЂРѕСЃС‚РѕРµ С‡РёСЃР»Рѕ
         }
-        // Удаляем все степени двойки
+        // РЈРґР°Р»СЏРµРј РІСЃРµ СЃС‚РµРїРµРЅРё РґРІРѕР№РєРё
         while (temp_n % 2 == 0) {
             temp_n /= 2;
         }
     }
 
-    // Проверка нечетных делителей от 3 до корня из числа
+    // РџСЂРѕРІРµСЂРєР° РЅРµС‡РµС‚РЅС‹С… РґРµР»РёС‚РµР»РµР№ РѕС‚ 3 РґРѕ РєРѕСЂРЅСЏ РёР· С‡РёСЃР»Р°
     for (unsigned long long i = 3; i * i <= temp_n; i += 2) {
         if (temp_n % i == 0) {
-            // Если i - простое число, добавляем его в массив
+            // Р•СЃР»Рё i - РїСЂРѕСЃС‚РѕРµ С‡РёСЃР»Рѕ, РґРѕР±Р°РІР»СЏРµРј РµРіРѕ РІ РјР°СЃСЃРёРІ
             if (count < max_factors && is_prostoe(i)) {
                 factors[count++] = i;
             }
-            // Удаляем все степени i
+            // РЈРґР°Р»СЏРµРј РІСЃРµ СЃС‚РµРїРµРЅРё i
             while (temp_n % i == 0) {
                 temp_n /= i;
             }
         }
     }
 
-    // Если осталось число больше 1, оно является простым делителем
+    // Р•СЃР»Рё РѕСЃС‚Р°Р»РѕСЃСЊ С‡РёСЃР»Рѕ Р±РѕР»СЊС€Рµ 1, РѕРЅРѕ СЏРІР»СЏРµС‚СЃСЏ РїСЂРѕСЃС‚С‹Рј РґРµР»РёС‚РµР»РµРј
     if (temp_n > 1) {
         if (count < max_factors && is_prostoe(temp_n)) {
             factors[count++] = temp_n;
@@ -112,7 +112,7 @@ int get_prime_factors(unsigned long long n, unsigned long long* factors, int max
     return count;
 }
 
-// Освобождение памяти, выделенной под результат get_c
+// РћСЃРІРѕР±РѕР¶РґРµРЅРёРµ РїР°РјСЏС‚Рё, РІС‹РґРµР»РµРЅРЅРѕР№ РїРѕРґ СЂРµР·СѓР»СЊС‚Р°С‚ get_c
 void free_get_c_result(Get_C_result* result) {
     if (result != NULL && result->numbers != NULL) {
         free(result->numbers);
@@ -123,30 +123,30 @@ void free_get_c_result(Get_C_result* result) {
 }
 
 //=============================================================================
-// ФУНКЦИИ ПАРСИНГА КОМАНД
+// Р¤РЈРќРљР¦РР РџРђР РЎРРќР“Рђ РљРћРњРђРќР”
 
 
-// Парсинг команды get_c из строки
+// РџР°СЂСЃРёРЅРі РєРѕРјР°РЅРґС‹ get_c РёР· СЃС‚СЂРѕРєРё
 Get_C_argument parse_get_c(char* command) {
     Get_C_argument args = { 0, 0, 0, 0 };
     char* token;
     char* next_token = NULL;
 
-    // Пропускаем первое слово (get_c)
+    // РџСЂРѕРїСѓСЃРєР°РµРј РїРµСЂРІРѕРµ СЃР»РѕРІРѕ (get_c)
     token = strtok_s(command, " ", &next_token);
     if (token == NULL) return args;
 
-    // Разбираем остальные аргументы вида ключ=значение
+    // Р Р°Р·Р±РёСЂР°РµРј РѕСЃС‚Р°Р»СЊРЅС‹Рµ Р°СЂРіСѓРјРµРЅС‚С‹ РІРёРґР° РєР»СЋС‡=Р·РЅР°С‡РµРЅРёРµ
     while ((token = strtok_s(NULL, " ", &next_token)) != NULL) {
         char* equals_pos = strchr(token, '=');
         if (equals_pos == NULL) continue;
 
-        // Разделяем строку на ключ и значение
+        // Р Р°Р·РґРµР»СЏРµРј СЃС‚СЂРѕРєСѓ РЅР° РєР»СЋС‡ Рё Р·РЅР°С‡РµРЅРёРµ
         *equals_pos = '\0';
         char* key = token;
         char* value_str = equals_pos + 1;
 
-        // Проверяем, что значение состоит только из цифр
+        // РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ Р·РЅР°С‡РµРЅРёРµ СЃРѕСЃС‚РѕРёС‚ С‚РѕР»СЊРєРѕ РёР· С†РёС„СЂ
         int is_digit = 1;
         for (char* p = value_str; *p != '\0'; p++) {
             if (*p < '0' || *p > '9') {
@@ -156,29 +156,29 @@ Get_C_argument parse_get_c(char* command) {
         }
         if (!is_digit) continue;
 
-        // Преобразуем строку в число
+        // РџСЂРµРѕР±СЂР°Р·СѓРµРј СЃС‚СЂРѕРєСѓ РІ С‡РёСЃР»Рѕ
         unsigned long long value = 0;
         if (sscanf(value_str, "%llu", &value) != 1) {
             continue;
         }
 
-        // Заполняем соответствующее поле структуры
+        // Р—Р°РїРѕР»РЅСЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РїРѕР»Рµ СЃС‚СЂСѓРєС‚СѓСЂС‹
         if (strcmp(key, "cmin") == 0) args.cmin = value;
         else if (strcmp(key, "cmax") == 0) args.cmax = value;
         else if (strcmp(key, "m") == 0) args.m = value;
     }
 
-    // Проверка корректности всех аргументов
+    // РџСЂРѕРІРµСЂРєР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё РІСЃРµС… Р°СЂРіСѓРјРµРЅС‚РѕРІ
     if (args.cmin > 0 && args.cmax > 0 && args.m > 0) {
         if (args.cmin < args.m && args.cmax < args.m && args.cmin <= args.cmax) {
-            args.valid = 1;  // все аргументы корректны
+            args.valid = 1;  // РІСЃРµ Р°СЂРіСѓРјРµРЅС‚С‹ РєРѕСЂСЂРµРєС‚РЅС‹
         }
     }
 
     return args;
 }
 
-// Парсинг команды get_a из строки
+// РџР°СЂСЃРёРЅРі РєРѕРјР°РЅРґС‹ get_a РёР· СЃС‚СЂРѕРєРё
 Get_A_argument parse_get_a(char* command) {
     Get_A_argument args = { 0, 0 };
     char* token;
@@ -195,7 +195,7 @@ Get_A_argument parse_get_a(char* command) {
         char* key = token;
         char* value_str = equals_pos + 1;
 
-        // Проверка на цифры
+        // РџСЂРѕРІРµСЂРєР° РЅР° С†РёС„СЂС‹
         int is_digit = 1;
         for (char* p = value_str; *p != '\0'; p++) {
             if (*p < '0' || *p > '9') {
@@ -213,12 +213,12 @@ Get_A_argument parse_get_a(char* command) {
         if (strcmp(key, "m") == 0) args.m = value;
     }
 
-    // Проверка корректности
+    // РџСЂРѕРІРµСЂРєР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё
     if (args.m > 0) args.valid = 1;
     return args;
 }
 
-// Парсинг команды lcg из строки
+// РџР°СЂСЃРёРЅРі РєРѕРјР°РЅРґС‹ lcg РёР· СЃС‚СЂРѕРєРё
 LCG_argument parse_lcg(char* command) {
     LCG_argument args = { 0, 0, 0, 0, 0, 0 };
     char* token;
@@ -235,7 +235,7 @@ LCG_argument parse_lcg(char* command) {
         char* key = token;
         char* value_str = equals_pos + 1;
 
-        // Проверка на цифры
+        // РџСЂРѕРІРµСЂРєР° РЅР° С†РёС„СЂС‹
         int is_digit = 1;
         for (char* p = value_str; *p != '\0'; p++) {
             if (*p < '0' || *p > '9') {
@@ -250,7 +250,7 @@ LCG_argument parse_lcg(char* command) {
             continue;
         }
 
-        // Заполняем соответствующее поле
+        // Р—Р°РїРѕР»РЅСЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РїРѕР»Рµ
         if (strcmp(key, "a") == 0) args.a = value;
         else if (strcmp(key, "x0") == 0) args.x0 = value;
         else if (strcmp(key, "c") == 0) args.c = value;
@@ -258,12 +258,12 @@ LCG_argument parse_lcg(char* command) {
         else if (strcmp(key, "n") == 0) args.n = value;
     }
 
-    // Проверка, что все аргументы найдены
-    // (значения могут быть 0, поэтому проверяем только наличие)
+    // РџСЂРѕРІРµСЂРєР°, С‡С‚Рѕ РІСЃРµ Р°СЂРіСѓРјРµРЅС‚С‹ РЅР°Р№РґРµРЅС‹
+    // (Р·РЅР°С‡РµРЅРёСЏ РјРѕРіСѓС‚ Р±С‹С‚СЊ 0, РїРѕСЌС‚РѕРјСѓ РїСЂРѕРІРµСЂСЏРµРј С‚РѕР»СЊРєРѕ РЅР°Р»РёС‡РёРµ)
     if (args.a > 0 || args.a == 0) {
         if (args.x0 > 0 || args.x0 == 0) {
             if (args.c > 0 || args.c == 0) {
-                if (args.m > 0) {  // m должно быть строго больше 0
+                if (args.m > 0) {  // m РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ СЃС‚СЂРѕРіРѕ Р±РѕР»СЊС€Рµ 0
                     if (args.n > 0 || args.n == 0) {
                         args.valid = 1;
                     }
@@ -276,29 +276,29 @@ LCG_argument parse_lcg(char* command) {
 }
 
 //=============================================================================
-// ОСНОВНЫЕ ФУНКЦИИ
+// РћРЎРќРћР’РќР«Р• Р¤РЈРќРљР¦РР
 
-// Функция get_c - находит все c, взаимно простые с m в диапазоне [cmin, cmax]
+// Р¤СѓРЅРєС†РёСЏ get_c - РЅР°С…РѕРґРёС‚ РІСЃРµ c, РІР·Р°РёРјРЅРѕ РїСЂРѕСЃС‚С‹Рµ СЃ m РІ РґРёР°РїР°Р·РѕРЅРµ [cmin, cmax]
 Get_C_result get_c(unsigned long long cmin, unsigned long long cmax, unsigned long long m) {
     Get_C_result result = { NULL, 0, 0 };
 
-    // Проверка корректности входных данных
+    // РџСЂРѕРІРµСЂРєР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё РІС…РѕРґРЅС‹С… РґР°РЅРЅС‹С…
     if (cmin >= m || cmax >= m) {
-        result.error = 1;  // cmin или cmax больше или равны m
+        result.error = 1;  // cmin РёР»Рё cmax Р±РѕР»СЊС€Рµ РёР»Рё СЂР°РІРЅС‹ m
         return result;
     }
 
     if (cmin > cmax) {
-        result.error = 2;  // cmin больше cmax
+        result.error = 2;  // cmin Р±РѕР»СЊС€Рµ cmax
         return result;
     }
 
     if (cmin == 0) {
-        result.error = 3;  // cmin должно быть больше 0
+        result.error = 3;  // cmin РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 0
         return result;
     }
 
-    // Первый проход: подсчет количества подходящих чисел
+    // РџРµСЂРІС‹Р№ РїСЂРѕС…РѕРґ: РїРѕРґСЃС‡РµС‚ РєРѕР»РёС‡РµСЃС‚РІР° РїРѕРґС…РѕРґСЏС‰РёС… С‡РёСЃРµР»
     int estimated_count = 0;
     for (unsigned long long c = cmin; c <= cmax; c++) {
         if (c > 0 && c < m && nod(c, m) == 1) {
@@ -306,14 +306,14 @@ Get_C_result get_c(unsigned long long cmin, unsigned long long cmax, unsigned lo
         }
     }
 
-    // Выделение памяти под массив результатов
+    // Р’С‹РґРµР»РµРЅРёРµ РїР°РјСЏС‚Рё РїРѕРґ РјР°СЃСЃРёРІ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
     result.numbers = (unsigned long long*)malloc(estimated_count * sizeof(unsigned long long));
     if (result.numbers == NULL) {
-        result.error = 4;  // Ошибка выделения памяти
+        result.error = 4;  // РћС€РёР±РєР° РІС‹РґРµР»РµРЅРёСЏ РїР°РјСЏС‚Рё
         return result;
     }
 
-    // Второй проход: заполнение массива
+    // Р’С‚РѕСЂРѕР№ РїСЂРѕС…РѕРґ: Р·Р°РїРѕР»РЅРµРЅРёРµ РјР°СЃСЃРёРІР°
     int index = 0;
     for (unsigned long long c = cmin; c <= cmax; c++) {
         if (c > 0 && c < m && nod(c, m) == 1) {
@@ -326,21 +326,21 @@ Get_C_result get_c(unsigned long long cmin, unsigned long long cmax, unsigned lo
     return result;
 }
 
-// Функция get_a - находит минимальное a, удовлетворяющее теореме о максимальном периоде
+// Р¤СѓРЅРєС†РёСЏ get_a - РЅР°С…РѕРґРёС‚ РјРёРЅРёРјР°Р»СЊРЅРѕРµ a, СѓРґРѕРІР»РµС‚РІРѕСЂСЏСЋС‰РµРµ С‚РµРѕСЂРµРјРµ Рѕ РјР°РєСЃРёРјР°Р»СЊРЅРѕРј РїРµСЂРёРѕРґРµ
 unsigned long long get_a(unsigned long long m) {
-    if (m <= 1) return 0;  // нет решения для m <= 1
+    if (m <= 1) return 0;  // РЅРµС‚ СЂРµС€РµРЅРёСЏ РґР»СЏ m <= 1
 
-    // Получаем все простые делители m
+    // РџРѕР»СѓС‡Р°РµРј РІСЃРµ РїСЂРѕСЃС‚С‹Рµ РґРµР»РёС‚РµР»Рё m
     unsigned long long factors[100];
     int factor_count = get_prime_factors(m, factors, 100);
 
-    if (factor_count == 0) return 0;  // нет простых делителей
+    if (factor_count == 0) return 0;  // РЅРµС‚ РїСЂРѕСЃС‚С‹С… РґРµР»РёС‚РµР»РµР№
 
-    // Поиск минимального a, удовлетворяющего условиям
+    // РџРѕРёСЃРє РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ a, СѓРґРѕРІР»РµС‚РІРѕСЂСЏСЋС‰РµРіРѕ СѓСЃР»РѕРІРёСЏРј
     for (unsigned long long a = 2; a < m; a++) {
         int conditions_met = 1;
 
-        // Условие: (a-1) должно делиться на каждый простой делитель m
+        // РЈСЃР»РѕРІРёРµ: (a-1) РґРѕР»Р¶РЅРѕ РґРµР»РёС‚СЊСЃСЏ РЅР° РєР°Р¶РґС‹Р№ РїСЂРѕСЃС‚РѕР№ РґРµР»РёС‚РµР»СЊ m
         for (int i = 0; i < factor_count; i++) {
             if ((a - 1) % factors[i] != 0) {
                 conditions_met = 0;
@@ -348,7 +348,7 @@ unsigned long long get_a(unsigned long long m) {
             }
         }
 
-        // Дополнительное условие: если m делится на 4, то (a-1) должно делиться на 4
+        // Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕРµ СѓСЃР»РѕРІРёРµ: РµСЃР»Рё m РґРµР»РёС‚СЃСЏ РЅР° 4, С‚Рѕ (a-1) РґРѕР»Р¶РЅРѕ РґРµР»РёС‚СЊСЃСЏ РЅР° 4
         if (conditions_met && m % 4 == 0) {
             if ((a - 1) % 4 != 0) {
                 conditions_met = 0;
@@ -356,25 +356,25 @@ unsigned long long get_a(unsigned long long m) {
         }
 
         if (conditions_met) {
-            return a;  // найдено минимальное подходящее a
+            return a;  // РЅР°Р№РґРµРЅРѕ РјРёРЅРёРјР°Р»СЊРЅРѕРµ РїРѕРґС…РѕРґСЏС‰РµРµ a
         }
     }
 
-    return 0;  // решение не найдено
+    return 0;  // СЂРµС€РµРЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ
 }
 
-// Функция lcg - генерирует последовательность псевдослучайных чисел
-// Возвращает 1 при успехе, 0 при ошибке
+// Р¤СѓРЅРєС†РёСЏ lcg - РіРµРЅРµСЂРёСЂСѓРµС‚ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ РїСЃРµРІРґРѕСЃР»СѓС‡Р°Р№РЅС‹С… С‡РёСЃРµР»
+// Р’РѕР·РІСЂР°С‰Р°РµС‚ 1 РїСЂРё СѓСЃРїРµС…Рµ, 0 РїСЂРё РѕС€РёР±РєРµ
 int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
     unsigned long long m, unsigned long long n, unsigned long long* results) {
 
-    // Проверка условий из задания
-    if (n == 0) return 0;        // n=0 - нет решения
-    if (a >= m) return 0;        // a >= m - нет решения
-    if (c >= m) return 0;        // c >= m - нет решения
-    if (x0 >= m) return 0;       // x0 >= m - нет решения
+    // РџСЂРѕРІРµСЂРєР° СѓСЃР»РѕРІРёР№ РёР· Р·Р°РґР°РЅРёСЏ
+    if (n == 0) return 0;        // n=0 - РЅРµС‚ СЂРµС€РµРЅРёСЏ
+    if (a >= m) return 0;        // a >= m - РЅРµС‚ СЂРµС€РµРЅРёСЏ
+    if (c >= m) return 0;        // c >= m - РЅРµС‚ СЂРµС€РµРЅРёСЏ
+    if (x0 >= m) return 0;       // x0 >= m - РЅРµС‚ СЂРµС€РµРЅРёСЏ
 
-    // Генерация последовательности по формуле: Xn+1 = (a * Xn + c) mod m
+    // Р“РµРЅРµСЂР°С†РёСЏ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё РїРѕ С„РѕСЂРјСѓР»Рµ: Xn+1 = (a * Xn + c) mod m
     unsigned long long current = x0;
 
     for (unsigned long long i = 0; i < n; i++) {
@@ -382,21 +382,21 @@ int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
         results[i] = current;
     }
 
-    return 1;  // успешно
+    return 1;  // СѓСЃРїРµС€РЅРѕ
 }
 
 //=============================================================================
-// ФУНКЦИИ ДЛЯ ЗАПИСИ РЕЗУЛЬТАТОВ В ФАЙЛ
+// Р¤РЈРќРљР¦РР Р”Р›РЇ Р—РђРџРРЎР Р Р•Р—РЈР›Р¬РўРђРўРћР’ Р’ Р¤РђР™Р›
 
 
-// Запись результата get_c в файл
+// Р—Р°РїРёСЃСЊ СЂРµР·СѓР»СЊС‚Р°С‚Р° get_c РІ С„Р°Р№Р»
 void write_get_c_result(FILE* output, Get_C_result result) {
     if (result.error != 0 || result.count == 0) {
         fprintf(output, "no solution\n");
         return;
     }
 
-    // Вывод всех найденных чисел через пробел
+    // Р’С‹РІРѕРґ РІСЃРµС… РЅР°Р№РґРµРЅРЅС‹С… С‡РёСЃРµР» С‡РµСЂРµР· РїСЂРѕР±РµР»
     for (int i = 0; i < result.count; i++) {
         fprintf(output, "%llu", result.numbers[i]);
         if (i < result.count - 1) {
@@ -406,7 +406,7 @@ void write_get_c_result(FILE* output, Get_C_result result) {
     fprintf(output, "\n");
 }
 
-// Запись результата get_a в файл
+// Р—Р°РїРёСЃСЊ СЂРµР·СѓР»СЊС‚Р°С‚Р° get_a РІ С„Р°Р№Р»
 void write_get_a_result(FILE* output, unsigned long long a) {
     if (a == 0) {
         fprintf(output, "no solution\n");
@@ -416,14 +416,14 @@ void write_get_a_result(FILE* output, unsigned long long a) {
     }
 }
 
-// Запись результата lcg в файл
+// Р—Р°РїРёСЃСЊ СЂРµР·СѓР»СЊС‚Р°С‚Р° lcg РІ С„Р°Р№Р»
 void write_lcg_result(FILE* output, unsigned long long* results, unsigned long long n, int success) {
     if (!success) {
         fprintf(output, "no solution\n");
         return;
     }
 
-    // Вывод сгенерированных чисел через пробел
+    // Р’С‹РІРѕРґ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹С… С‡РёСЃРµР» С‡РµСЂРµР· РїСЂРѕР±РµР»
     for (unsigned long long i = 0; i < n; i++) {
         fprintf(output, "%llu", results[i]);
         if (i < n - 1) {
@@ -437,27 +437,27 @@ void write_lcg_result(FILE* output, unsigned long long* results, unsigned long l
 int main() {
     SetConsoleOutputCP(1251);
 
-    // Открытие входного файла
+    // РћС‚РєСЂС‹С‚РёРµ РІС…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°
     FILE* input = fopen("input.txt", "r");
     if (input == NULL) {
-        printf("Ошибка: не могу открыть input.txt\n");
+        printf("РћС€РёР±РєР°: РЅРµ РјРѕРіСѓ РѕС‚РєСЂС‹С‚СЊ input.txt\n");
         system("pause");
         return 1;
     }
 
-    // Открытие выходного файла
+    // РћС‚РєСЂС‹С‚РёРµ РІС‹С…РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р°
     FILE* output = fopen("output.txt", "w");
     if (output == NULL) {
-        printf("Ошибка: не могу открыть output.txt\n");
+        printf("РћС€РёР±РєР°: РЅРµ РјРѕРіСѓ РѕС‚РєСЂС‹С‚СЊ output.txt\n");
         fclose(input);
         system("pause");
         return 1;
     }
 
-    // Чтение команды из файла
+    // Р§С‚РµРЅРёРµ РєРѕРјР°РЅРґС‹ РёР· С„Р°Р№Р»Р°
     char command[256] = { 0 };
     if (fgets(command, sizeof(command), input) == NULL) {
-        printf("Ошибка: файл input.txt пуст\n");
+        printf("РћС€РёР±РєР°: С„Р°Р№Р» input.txt РїСѓСЃС‚\n");
         fprintf(output, "incorrect command\n");
         fclose(input);
         fclose(output);
@@ -465,17 +465,17 @@ int main() {
         return 1;
     }
 
-    // Удаление символа перевода строки в конце
+    // РЈРґР°Р»РµРЅРёРµ СЃРёРјРІРѕР»Р° РїРµСЂРµРІРѕРґР° СЃС‚СЂРѕРєРё РІ РєРѕРЅС†Рµ
     size_t len = strlen(command);
     if (len > 0 && command[len - 1] == '\n') {
         command[len - 1] = '\0';
     }
 
-    // Создание копии команды для парсинга (strtok_s изменяет строку)
+    // РЎРѕР·РґР°РЅРёРµ РєРѕРїРёРё РєРѕРјР°РЅРґС‹ РґР»СЏ РїР°СЂСЃРёРЅРіР° (strtok_s РёР·РјРµРЅСЏРµС‚ СЃС‚СЂРѕРєСѓ)
     char command_copy[256];
     strcpy_s(command_copy, sizeof(command_copy), command);
 
-    // Получение ключевого слова (первое слово в строке)
+    // РџРѕР»СѓС‡РµРЅРёРµ РєР»СЋС‡РµРІРѕРіРѕ СЃР»РѕРІР° (РїРµСЂРІРѕРµ СЃР»РѕРІРѕ РІ СЃС‚СЂРѕРєРµ)
     char* next_token = NULL;
     char* keyword = strtok_s(command_copy, " ", &next_token);
 
@@ -487,7 +487,7 @@ int main() {
         return 1;
     }
 
-    // Обработка команды get_c
+    // РћР±СЂР°Р±РѕС‚РєР° РєРѕРјР°РЅРґС‹ get_c
     if (strcmp(keyword, "get_c") == 0) {
         char args_copy[256];
         strcpy_s(args_copy, sizeof(args_copy), command);
@@ -503,7 +503,7 @@ int main() {
             fprintf(output, "incorrect command\n");
         }
     }
-    // Обработка команды get_a
+    // РћР±СЂР°Р±РѕС‚РєР° РєРѕРјР°РЅРґС‹ get_a
     else if (strcmp(keyword, "get_a") == 0) {
         char args_copy[256];
         strcpy_s(args_copy, sizeof(args_copy), command);
@@ -518,7 +518,7 @@ int main() {
             fprintf(output, "incorrect command\n");
         }
     }
-    // Обработка команды lcg
+    // РћР±СЂР°Р±РѕС‚РєР° РєРѕРјР°РЅРґС‹ lcg
     else if (strcmp(keyword, "lcg") == 0) {
         char args_copy[256];
         strcpy_s(args_copy, sizeof(args_copy), command);
@@ -526,7 +526,7 @@ int main() {
         LCG_argument args = parse_lcg(args_copy);
 
         if (args.valid) {
-            // Выделение памяти под массив результатов
+            // Р’С‹РґРµР»РµРЅРёРµ РїР°РјСЏС‚Рё РїРѕРґ РјР°СЃСЃРёРІ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
             unsigned long long* results = (unsigned long long*)malloc(args.n * sizeof(unsigned long long));
             if (results == NULL) {
                 fprintf(output, "no solution\n");
@@ -541,12 +541,12 @@ int main() {
             fprintf(output, "incorrect command\n");
         }
     }
-    // Неизвестная команда
+    // РќРµРёР·РІРµСЃС‚РЅР°СЏ РєРѕРјР°РЅРґР°
     else {
         fprintf(output, "incorrect command\n");
     }
 
-    // Закрытие файлов
+    // Р—Р°РєСЂС‹С‚РёРµ С„Р°Р№Р»РѕРІ
     fclose(input);
     fclose(output);
 
