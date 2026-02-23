@@ -361,3 +361,23 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Xcode
+*.xcworkspace
+xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/
+*.m
+*.h
+*.plist
+*.pbxuser
+*.mode1v3
+*.perspectivev3
+*.xcuserstate
+*.xcscmblueprint
+*.xcscheme
+!default.mode1v3
+!default.perspectivev3
+.DS_Store
+build/
+*.o
