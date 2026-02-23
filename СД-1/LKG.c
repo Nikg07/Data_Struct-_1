@@ -5,7 +5,7 @@
 #include <math.h>
 #include <windows.h>
 
-
+/*   =========  Структуры    =========  */
 // Структура для хранения аргументов команды get_c
 typedef struct Get_С_argument {
 	unsigned long long cmin;
@@ -25,6 +25,7 @@ typedef struct Get_A_argument {
     int valid;  // Флаг, что все аргументы найдены
 } Get_A_argument;
 
+/* ============ Вспомогательные функции =============   */
 // Нахождение НОД (Алгоритм Евклида) для функции get_c
 unsigned long long nod(unsigned long long a, unsigned long long b) {
 	unsigned long long ostatok = a % b;
@@ -42,8 +43,8 @@ int is_prostoe(unsigned long long n) {
 	if (n == 2) return 1;      // 2 - простое
 	if (n % 2 == 0) return 0; // четные > 2 - не простые
 
-	int limit = (unsigned long long)sqrt(n);
-	for (int i = 3; i <= limit; i += 2) { // только нечетные делители
+    unsigned long long limit = (unsigned long long)sqrt(n);
+	for (unsigned long long i = 3; i <= limit; i += 2) { // только нечетные делители
 		if (n % i == 0) {
 			return 0;
 		}
@@ -97,6 +98,10 @@ void free_get_c_result(Get_C_result* result) {
         result->error = 0;
     }
 }
+
+
+
+/*  ============== Парсинг ===============  */
 // Парсинг get_c из строки
 Get_C_argument parse_get_c(char* command) {
 Get_C_argument args = { 0, 0, 0, 0 };
@@ -205,7 +210,7 @@ Get_A_argument parse_get_a(char* command) {
 
 
 
-
+/* =========== get_a и get_c ===============   */
 // Функция get_c - возвращает структуру с массивом всех c, взаимно простых с m
 Get_C_result get_c(unsigned long long cmin, unsigned long long cmax, unsigned long long m) {
     Get_C_result result = { NULL,0,0 };
@@ -299,6 +304,11 @@ unsigned long long get_a(unsigned long long m) {
     return 0;
 }
 
+
+
+
+
+/* ============= Вывод ============= */
 // Функция для вывода результата get_c
 void print_get_c_result(Get_C_result result) {
     if (result.error != 0) {
