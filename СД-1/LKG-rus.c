@@ -46,22 +46,32 @@ typedef struct LCG_argument {
     int valid;              // флаг корректности аргументов
 } LCG_argument;
 
+typedef enum {
+    ZERO,
+    PAIR,
+    TWO_PAIRS,
+    SET,
+    FULL_HOUSE,
+    QUADS,
+    POKER
+} Type_of_hand;
+
 //=============================================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 
 // Алгоритм Евклида для нахождения наибольшего общего делителя
 unsigned long long nod(unsigned long long a, unsigned long long b) {
-    unsigned long long ostatok = a % b;
-    while (ostatok) {
+    unsigned long long remains = a % b;
+    while (remains) {
         a = b;
-        b = ostatok;
-        ostatok = a % b;
+        b = remains;
+        remains = a % b;
     }
     return b;
 }
 
 // Проверка числа на простоту
-int is_prostoe(unsigned long long n) {
+int is_prime(unsigned long long n) {
     if (n < 2) return 0;          // числа меньше 2 не простые
     if (n == 2) return 1;         // 2 - простое число
     if (n % 2 == 0) return 0;     // четные числа больше 2 не простые
@@ -77,7 +87,7 @@ int is_prostoe(unsigned long long n) {
 }
 
 // Нахождение всех простых делителей числа. Возвращает количество найденных делителей
-int get_prime_factors(unsigned long long n, unsigned long long* factors, int max_factors) {
+int get_prime_divider(unsigned long long n, unsigned long long* factors, int max_factors) {
     int count = 0;
     unsigned long long temp_n = n;  // рабочая копия числа
 
@@ -98,7 +108,7 @@ int get_prime_factors(unsigned long long n, unsigned long long* factors, int max
     for (unsigned long long i = 3; i * i <= temp_n; i += 2) {
         if (temp_n % i == 0) {
             // Если i - простое число, добавляем его в массив
-            if (count < max_factors && is_prostoe(i)) {
+            if (count < max_factors && is_prime(i)) {
                 factors[count++] = i;
             }
             // Удаляем все степени i
@@ -110,12 +120,210 @@ int get_prime_factors(unsigned long long n, unsigned long long* factors, int max
 
     // Если осталось число больше 1, оно является простым делителем
     if (temp_n > 1) {
-        if (count < max_factors && is_prostoe(temp_n)) {
+        if (count < max_factors && is_prime(temp_n)) {
             factors[count++] = temp_n;
         }
     }
 
     return count;
+}
+
+// Компаратор для сортировки unsigned long long по возрастанию
+int cmp_ull(const void *a, const void *b) {
+    unsigned long long aa = *(unsigned long long*)a;
+    unsigned long long bb = *(unsigned long long*)b;
+    if (aa < bb) return -1;
+    if (aa > bb) return 1;
+    return 0;
+}
+
+// Компаратор для сортировки int по убыванию
+int cmp_int_desc(const void *a, const void *b) {
+    int aa = *(int*)a;
+    int bb = *(int*)b;
+    return bb - aa;
+}
+
+// Определение типа руки
+Type_of_hand hand_type(unsigned long long hand[5]) {
+    unsigned long long sorted[5];
+    for (int i = 0; i < 5; i++) {
+        sorted[i] = hand[i];
+    }
+    
+    // Сортировка руки для простоты поиска одинаковых карт
+    qsort(sorted, 5, sizeof(unsigned long long), cmp_ull);
+    
+    int counts[5] = {0};
+    int idx = 0;
+    unsigned long long current = sorted[0];
+    int cnt = 1;
+    
+    // Поиск одинаковых чисел в отсортированной руке
+    for (int i = 1; i < 5; i++) {
+        if (sorted[i] == current) {
+            cnt++;
+        } else {
+            counts[idx++] = cnt;
+            current = sorted[i];
+            cnt = 1;
+        }
+    }
+    
+    counts[idx++] = cnt;
+    
+    qsort(counts, idx, sizeof(int), cmp_int_desc);
+    
+    if (idx == 1) {
+        return POKER;
+    }
+    if (idx == 2) {
+        return (counts[0] == 4) ? QUADS : FULL_HOUSE;
+    }
+    if (idx == 3) {
+        return (counts[0] == 3) ? SET : TWO_PAIRS;
+    }
+    if (idx == 4) {
+        return PAIR;
+    }
+    if (idx == 5) {
+        return ZERO;
+    }
+    
+    return -1;
+}
+
+// Подсчет количества комбинаций
+int count_observed(unsigned long long* numbers, int total, int observed[7]) {
+    // Инициализируем массив типов руки нулями
+    for (int i = 0; i < 7; i++) {
+        observed[i] = 0;
+    }
+    
+    // Количество полных рук
+    int num_hands = total / 5;
+    if (num_hands == 0) return 0;
+    
+    // Обрабатываем каждую руку формируя массив из 5
+    for (int h = 0; h < num_hands; h++) {
+        unsigned long long hand[5];
+        for (int i = 0; i < 5; i++) {
+            hand[i] = numbers[h * 5 + i];
+        }
+        
+        Type_of_hand type = hand_type(hand);
+        
+        observed[type]++;
+    }
+    
+    return num_hands;
+}
+
+// Определение приблизительного количества вариантов чисел
+unsigned long long find_range(unsigned long long* numbers, int count,
+                              unsigned long long* min_val, unsigned long long* max_val) {
+    
+    if (count == 0) return 0;
+    
+    for (int i = 1; i < count; i++) {
+        if (numbers[i] < *min_val) *min_val = numbers[i];
+        if (numbers[i] > *max_val) *max_val = numbers[i];
+    }
+    
+    unsigned long long M = *max_val - *min_val + 1;
+    return M;
+}
+
+
+void compute_expected(unsigned long long M, int num_hands, double expected[7]) {
+    // Общее количество возможных упорядоченных пятёрок
+    double total_outcomes = pow((double)M, 5.0);
+    
+    // Для удобства вычислим все необходимые биномиальные коэффициенты
+    double C_M_5, C_M_4, C_M_3, C_M_2, C_M_1;
+    double C_Mminus1_3, C_Mminus1_2, C_Mminus2_1;
+    
+    // Вычисляем сочетания (используем формулы, чтобы избежать переполнения)
+    if (M >= 5) {
+        C_M_5 = (double)M * (M-1) * (M-2) * (M-3) * (M-4) / 120.0;
+    } else {
+        C_M_5 = 0.0;
+    }
+    
+    // C(M,4) = M*(M-1)*(M-2)*(M-3)/24
+    if (M >= 4) {
+        C_M_4 = (double)M * (M-1) * (M-2) * (M-3) / 24.0;
+    } else {
+        C_M_4 = 0.0;
+    }
+    
+    // C(M,3) = M*(M-1)*(M-2)/6
+    if (M >= 3) {
+        C_M_3 = (double)M * (M-1) * (M-2) / 6.0;
+    } else {
+        C_M_3 = 0.0;
+    }
+    
+    // C(M,2) = M*(M-1)/2
+    if (M >= 2) {
+        C_M_2 = (double)M * (M-1) / 2.0;
+    } else {
+        C_M_2 = 0.0;
+    }
+    
+    // C(M,1) = M
+    C_M_1 = (double)M;
+    
+    // C(M-1,3)
+    if (M-1 >= 3) {
+        C_Mminus1_3 = (double)(M-1) * (M-2) * (M-3) / 6.0;
+    } else {
+        C_Mminus1_3 = 0.0;
+    }
+    
+    // C(M-1,2)
+    if (M-1 >= 2) {
+        C_Mminus1_2 = (double)(M-1) * (M-2) / 2.0;
+    } else {
+        C_Mminus1_2 = 0.0;
+    }
+    
+    // C(M-2,1) = M-2, только для версий M >= 3
+    if (M >= 3) {
+        C_Mminus2_1 = (double)(M-2);
+    } else {
+        C_Mminus2_1 = 0.0;
+    }
+    
+    // Количество исходов для каждого типа
+    double counts[7];
+    
+    // zero
+    counts[0] = C_M_5 * 120.0;  // 5! = 120
+    
+    // pair
+    counts[1] = C_M_1 * C_Mminus1_3 * (120.0 / 2.0); // 5!/2! = 120/2 = 60
+    
+    // two pairs
+    counts[2] = C_M_2 * C_Mminus2_1 * (120.0 / (2.0 * 2.0)); // 5!/(2!2!) = 120/4 = 30
+    
+    // set
+    counts[3] = C_M_1 * C_Mminus1_2 * (120.0 / 6.0); // 5!/3! = 120/6 = 20
+    
+    // full-house
+    counts[4] = C_M_1 * (M-1) * (120.0 / (6.0 * 2.0)); // 5!/(3!2!) = 120/(6*2)=120/12=10
+    
+    // quads
+    counts[5] = C_M_1 * (M-1) * (120.0 / 24.0); // 5!/4! = 120/24 = 5
+    
+    // poker
+    counts[6] = C_M_1;  // 5!/5! = 1
+    
+    // Вычисление вероятности и ожидаемых частотот
+    for (int i = 0; i < 7; i++) {
+        double prob = counts[i] / total_outcomes;
+        expected[i] = prob * num_hands;
+    }
 }
 
 // Освобождение памяти, выделенной под результат get_c
@@ -265,19 +473,87 @@ LCG_argument parse_lcg(char* command) {
 
     // Проверка, что все аргументы найдены
     // (значения могут быть 0, поэтому проверяем только наличие)
-    if (args.a > 0 || args.a == 0) {
-        if (args.x0 > 0 || args.x0 == 0) {
-            if (args.c > 0 || args.c == 0) {
-                if (args.m > 0) {  // m должно быть строго больше 0
-                    if (args.n > 0 || args.n == 0) {
-                        args.valid = 1;
-                    }
-                }
-            }
-        }
+    if (args.a >= 0 && args.x0 >= 0 && args.c >= 0 && args.m > 0 && args.n >= 0 ) {
+        args.valid = 1;
     }
 
     return args;
+}
+
+// Парсинг команды test с возвратом массива чисел
+unsigned long long* parse_test(char* command, int* out_count) {
+    char* cmd_copy = strdup(command);
+    if (!cmd_copy) return NULL;
+
+    char* saveptr;
+    char* token = strtok_r(cmd_copy, " \t", &saveptr);
+    if (!token) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    if (strcmp(token, "test") != 0) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    token = strtok_r(NULL, " \t", &saveptr);
+    if (!token) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    char* equals_pos = strchr(token, '=');
+    if (!equals_pos) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    *equals_pos = '\0';
+    char* key = token;
+    char* test_file_name = equals_pos + 1;
+
+    if (strcmp(key, "inp") != 0) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    FILE* test_file = fopen(test_file_name, "r");
+    if (!test_file) {
+        free(cmd_copy);
+        return NULL;
+    }
+
+    int capacity = 10;
+    unsigned long long* num_arr = (unsigned long long*)malloc(capacity * sizeof(unsigned long long));
+    if (!num_arr) {
+        fclose(test_file);
+        free(cmd_copy);
+        return NULL;
+    }
+
+    int count = 0;
+    unsigned long long value = 0;
+
+    while (fscanf(test_file, "%llu", &value) == 1) {
+           // Увеличение размера если количество больше
+           if (count >= capacity) {
+               capacity *= 2;
+               unsigned long long* new_arr = (unsigned long long*)realloc(num_arr, capacity * sizeof(unsigned long long));
+               if (!new_arr) {
+                   free(num_arr);
+                   fclose(test_file);
+                   return NULL;
+               }
+               num_arr = new_arr;
+           }
+           num_arr[count++] = value;
+       }
+       
+    
+    fclose(test_file);
+    *out_count = count;
+    return num_arr;
 }
 
 //=============================================================================
@@ -337,7 +613,7 @@ unsigned long long get_a(unsigned long long m) {
 
     // Получаем все простые делители m
     unsigned long long factors[100];
-    int factor_count = get_prime_factors(m, factors, 100);
+    int factor_count = get_prime_divider(m, factors, 100);
 
     if (factor_count == 0) return 0;  // нет простых делителей
 
@@ -390,6 +666,35 @@ int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
     return 1;  // успешно
 }
 
+int poker_test(unsigned long long* numbers, int num_count,
+                int observed[7], double expected[7], FILE* poker_test_f) {
+    
+    unsigned long long min_val = numbers[0];
+    unsigned long long max_val = numbers[0];
+    
+    // Вычисление M
+    unsigned long long M = find_range(numbers, num_count, &min_val, &max_val);
+    fprintf(poker_test_f, "Диапазон значений: от %llu до %llu, M = %llu\n", min_val, max_val, M);
+    
+    // Подсчёт наблюдаемых частот
+    int num_hands = count_observed(numbers, num_count, observed);
+    if (num_hands == 0) {
+        fprintf(poker_test_f, "Недостаточно чисел для формирования хотя бы одной руки (нужно минимум 5).\n");
+        free(numbers);
+        return 0;
+    }
+    
+    fprintf(poker_test_f, "Количество полных рук (по 5 чисел): %d\n", num_hands);
+    
+    // Вычисление ожидаемых частот
+    compute_expected(M, num_hands, expected);
+    
+    free(numbers);
+    
+    return num_hands;
+}
+
+
 //=============================================================================
 // ФУНКЦИИ ДЛЯ ЗАПИСИ РЕЗУЛЬТАТОВ В ФАЙЛ
 
@@ -437,10 +742,62 @@ void write_lcg_result(FILE* output, unsigned long long* results, unsigned long l
     fprintf(output, "\n");
 }
 
+void write_poker_test_result(int observed[7], double expected[7], int num_hands, FILE* poker_test_f) {
+    double chi2 = 0.0;
+    
+    fprintf(poker_test_f, "\n========== РЕЗУЛЬТАТЫ ТЕСТА ПОКЕРА ==========\n");
+    fprintf(poker_test_f, "Тип комбинации   | Наблюдаемые | Ожидаемые  | (O-E)^2/E\n");
+    fprintf(poker_test_f, "-----------------+-------------+------------+-----------\n");
+    
+    char* type_names[7] = {
+        "Все разные",
+        "Одна пара ",
+        "Две пары  ",
+        "Тройка    ",
+        "Фулл-хаус ",
+        "Каре      ",
+        "Покер     "
+    };
+    
+    for (int i = 0; i < 7; i++) {
+        double diff = observed[i] - expected[i];
+        double term = (diff * diff) / expected[i];
+        chi2 += term;
+        
+        fprintf(poker_test_f, "%s | %11d | %10.2f | %10.4f\n",
+               type_names[i], observed[i], expected[i], term);
+    }
+    
+    fprintf(poker_test_f, "------------------------------------------------\n");
+    fprintf(poker_test_f, "ХИ-КВАДРАТ = %.4f\n", chi2);
+    fprintf(poker_test_f, "Степени свободы = 6\n");
+    
+    // Критические значения для 6 степеней свободы (таблица хи-квадрат)
+    double critical_005 = 12.59;
+    double critical_001 = 16.81;
+    
+    fprintf(poker_test_f, "\nВЫВОД О СЛУЧАЙНОСТИ:\n");
+    if (chi2 < critical_005) {
+        fprintf(poker_test_f, "✓ Последовательность ПРОШЛА тест покера (p > 0.05).\n");
+        fprintf(poker_test_f, "  Распределение комбинаций близко к случайному.\n");
+    } else if (chi2 < critical_001) {
+        fprintf(poker_test_f, "⚠ Последовательность ПРОШЛА тест с уровнем значимости 0.01 < p < 0.05.\n");
+        fprintf(poker_test_f, "  Имеются умеренные отклонения от случайности.\n");
+    } else {
+        fprintf(poker_test_f, "✗ Последовательность НЕ ПРОШЛА тест покера (p < 0.01).\n");
+        fprintf(poker_test_f, "  Распределение комбинаций значимо отличается от случайного.\n");
+    }
+    fprintf(poker_test_f, "==============================================\n");
+}
+
 //=============================================================================
+
+
+//=============================================================================
+
 int main(void) {
     #ifdef _WIN32
-        SetConsoleOutputCP(1251);  // только для Windows
+        SetConsoleOutputCP(1251);
     #endif
 
     // Открытие входного файла
@@ -453,24 +810,19 @@ int main(void) {
         return 1;
     }
 
-    // Открытие выходного файла
-    FILE* output = fopen("output.txt", "w");
-    if (output == NULL) {
-        printf("Ошибка: не могу открыть output.txt\n");
-        fclose(input);
-        #ifdef _WIN32
-            system("pause");
-        #endif
-        return 1;
-    }
-
     // Чтение команды из файла
-    char command[256] = { 0 };
+    char command[256] = {0};
     if (fgets(command, sizeof(command), input) == NULL) {
         printf("Ошибка: файл input.txt пуст\n");
-        fprintf(output, "incorrect command\n");
+        
+        // Открываем output для записи ошибки
+        FILE* output = fopen("output.txt", "w");
+        if (output != NULL) {
+            fprintf(output, "incorrect command\n");
+            fclose(output);
+        }
+        
         fclose(input);
-        fclose(output);
         #ifdef _WIN32
             system("pause");
         #endif
@@ -483,18 +835,21 @@ int main(void) {
         command[len - 1] = '\0';
     }
 
-    // Создание копии команды для парсинга (strtok_r изменяет строку)
+    // Создание копии команды для парсинга
     char command_copy[256];
-    strcpy(command_copy, command);  // безопасно, т.к. размеры совпадают
+    strcpy(command_copy, command);
 
-    // Получение ключевого слова (первое слово в строке)
+    // Получение ключевого слова
     char* saveptr = NULL;
     char* keyword = strtok_r(command_copy, " ", &saveptr);
 
     if (keyword == NULL) {
-        fprintf(output, "incorrect command\n");
+        FILE* output = fopen("output.txt", "w");
+        if (output != NULL) {
+            fprintf(output, "incorrect command\n");
+            fclose(output);
+        }
         fclose(input);
-        fclose(output);
         #ifdef _WIN32
             system("pause");
         #endif
@@ -503,6 +858,17 @@ int main(void) {
 
     // Обработка команды get_c
     if (strcmp(keyword, "get_c") == 0) {
+        // Открываем output на запись
+        FILE* output = fopen("output.txt", "w");
+        if (output == NULL) {
+            printf("Ошибка: не могу открыть output.txt для записи\n");
+            fclose(input);
+            #ifdef _WIN32
+                system("pause");
+            #endif
+            return 1;
+        }
+        
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -516,9 +882,22 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
+        
+        fclose(output);
     }
     // Обработка команды get_a
     else if (strcmp(keyword, "get_a") == 0) {
+        // Открываем output на запись
+        FILE* output = fopen("output.txt", "w");
+        if (output == NULL) {
+            printf("Ошибка: не могу открыть output.txt для записи\n");
+            fclose(input);
+            #ifdef _WIN32
+                system("pause");
+            #endif
+            return 1;
+        }
+        
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -531,9 +910,22 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
+        
+        fclose(output);
     }
     // Обработка команды lcg
     else if (strcmp(keyword, "lcg") == 0) {
+        // Открываем output на запись
+        FILE* output = fopen("output.txt", "w");
+        if (output == NULL) {
+            printf("Ошибка: не могу открыть output.txt для записи\n");
+            fclose(input);
+            #ifdef _WIN32
+                system("pause");
+            #endif
+            return 1;
+        }
+        
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -554,15 +946,67 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
+        
+        fclose(output);
+    }
+    // Обработка команды test
+    else if (strcmp(keyword, "test") == 0) {
+        // Открываем файл для результатов теста
+        FILE* poker_test_f = fopen("poker_test.txt", "w");
+        if (poker_test_f == NULL) {
+            printf("Ошибка: не могу создать poker_test.txt\n");
+            fclose(input);
+            // Открываем output для записи ошибки
+            FILE* output = fopen("output.txt", "w");
+            if (output != NULL) {
+                fprintf(output, "incorrect command\n");
+                fclose(output);
+            }
+            
+            fclose(input);
+            #ifdef _WIN32
+                system("pause");
+            #endif
+            return 1;
+        }
+        
+        int num_count = 0;
+        int observed[7] = {0};
+        double expected[7] = {0.0};
+        
+        // Функция parse_test должна быть модифицирована для чтения из файла
+        // или создана новая функция parse_test_from_file
+        unsigned long long* numbers = parse_test(command, &num_count);
+        
+        if (numbers != NULL && num_count > 0) {
+            int num_hands = poker_test(numbers, num_count, observed, expected, poker_test_f);
+            
+            if (num_hands > 0) {
+                write_poker_test_result(observed, expected, num_hands, poker_test_f);
+            } else {
+                fprintf(poker_test_f, "incorrect work\n");
+            }
+        } else {
+            fprintf(poker_test_f, "incorrect command\n");
+        }
+        
+        fclose(poker_test_f);
     }
     // Неизвестная команда
     else {
-        fprintf(output, "incorrect command\n");
+        FILE* output = fopen("output.txt", "w");
+        if (output != NULL) {
+            fprintf(output, "incorrect command\n");
+            fclose(output);
+        }
     }
 
-    // Закрытие файлов
+    // Закрытие входного файла
     fclose(input);
-    fclose(output);
 
+    #ifdef _WIN32
+        system("pause");
+    #endif
+    
     return 0;
 }
