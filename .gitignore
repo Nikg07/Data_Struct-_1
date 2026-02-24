@@ -363,3 +363,28 @@ MigrationBackup/
 FodyWeavers.xsd
 /СД-1/input.txt
 /СД-1/output.txt
+
+# === Дополнения для macOS и Xcode ===
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode
+*.xcworkspace/
+*.xcodeproj/
+xcuserdata/
+*.xcuserstate
+*.xcbkptlist
+*.xcplugindata
+*.xcbkptlist
+*.xcshareddata/
+*.xcuserdatad/
+
+# Общие файлы ввода/вывода (опционально)
+input.txt
+output.txt
