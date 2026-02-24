@@ -1,9 +1,16 @@
-﻿#define _CRT_SECURE_NO_WARNINGS 1
+#define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <windows.h>
+
+// Переносимость: для Windows используем strtok_s как strtok_r
+#ifdef _WIN32
+    #include <windows.h>
+    #define strtok_r strtok_s
+#else
+    // На Unix-подобных системах strtok_r доступен в string.h
+#endif
 
 //=============================================================================
 // СТРУКТУРЫ
@@ -41,7 +48,6 @@ typedef struct LCG_argument {
 
 //=============================================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-
 
 // Алгоритм Евклида для нахождения наибольшего общего делителя
 unsigned long long nod(unsigned long long a, unsigned long long b) {
@@ -125,19 +131,18 @@ void free_get_c_result(Get_C_result* result) {
 //=============================================================================
 // ФУНКЦИИ ПАРСИНГА КОМАНД
 
-
 // Парсинг команды get_c из строки
 Get_C_argument parse_get_c(char* command) {
     Get_C_argument args = { 0, 0, 0, 0 };
     char* token;
-    char* next_token = NULL;
+    char* saveptr = NULL;  // для strtok_r
 
     // Пропускаем первое слово (get_c)
-    token = strtok_s(command, " ", &next_token);
+    token = strtok_r(command, " ", &saveptr);
     if (token == NULL) return args;
 
     // Разбираем остальные аргументы вида ключ=значение
-    while ((token = strtok_s(NULL, " ", &next_token)) != NULL) {
+    while ((token = strtok_r(NULL, " ", &saveptr)) != NULL) {
         char* equals_pos = strchr(token, '=');
         if (equals_pos == NULL) continue;
 
@@ -182,12 +187,12 @@ Get_C_argument parse_get_c(char* command) {
 Get_A_argument parse_get_a(char* command) {
     Get_A_argument args = { 0, 0 };
     char* token;
-    char* next_token = NULL;
+    char* saveptr = NULL;
 
-    token = strtok_s(command, " ", &next_token);
+    token = strtok_r(command, " ", &saveptr);
     if (token == NULL) return args;
 
-    while ((token = strtok_s(NULL, " ", &next_token)) != NULL) {
+    while ((token = strtok_r(NULL, " ", &saveptr)) != NULL) {
         char* equals_pos = strchr(token, '=');
         if (equals_pos == NULL) continue;
 
@@ -222,12 +227,12 @@ Get_A_argument parse_get_a(char* command) {
 LCG_argument parse_lcg(char* command) {
     LCG_argument args = { 0, 0, 0, 0, 0, 0 };
     char* token;
-    char* next_token = NULL;
+    char* saveptr = NULL;
 
-    token = strtok_s(command, " ", &next_token);
+    token = strtok_r(command, " ", &saveptr);
     if (token == NULL) return args;
 
-    while ((token = strtok_s(NULL, " ", &next_token)) != NULL) {
+    while ((token = strtok_r(NULL, " ", &saveptr)) != NULL) {
         char* equals_pos = strchr(token, '=');
         if (equals_pos == NULL) continue;
 
@@ -388,7 +393,6 @@ int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
 //=============================================================================
 // ФУНКЦИИ ДЛЯ ЗАПИСИ РЕЗУЛЬТАТОВ В ФАЙЛ
 
-
 // Запись результата get_c в файл
 void write_get_c_result(FILE* output, Get_C_result result) {
     if (result.error != 0 || result.count == 0) {
@@ -434,14 +438,18 @@ void write_lcg_result(FILE* output, unsigned long long* results, unsigned long l
 }
 
 //=============================================================================
-int main() {
-    SetConsoleOutputCP(1251);
+int main(void) {
+    #ifdef _WIN32
+        SetConsoleOutputCP(1251);  // только для Windows
+    #endif
 
     // Открытие входного файла
     FILE* input = fopen("input.txt", "r");
     if (input == NULL) {
         printf("Ошибка: не могу открыть input.txt\n");
-        system("pause");
+        #ifdef _WIN32
+            system("pause");
+        #endif
         return 1;
     }
 
@@ -450,7 +458,9 @@ int main() {
     if (output == NULL) {
         printf("Ошибка: не могу открыть output.txt\n");
         fclose(input);
-        system("pause");
+        #ifdef _WIN32
+            system("pause");
+        #endif
         return 1;
     }
 
@@ -461,7 +471,9 @@ int main() {
         fprintf(output, "incorrect command\n");
         fclose(input);
         fclose(output);
-        system("pause");
+        #ifdef _WIN32
+            system("pause");
+        #endif
         return 1;
     }
 
@@ -471,26 +483,28 @@ int main() {
         command[len - 1] = '\0';
     }
 
-    // Создание копии команды для парсинга (strtok_s изменяет строку)
+    // Создание копии команды для парсинга (strtok_r изменяет строку)
     char command_copy[256];
-    strcpy_s(command_copy, sizeof(command_copy), command);
+    strcpy(command_copy, command);  // безопасно, т.к. размеры совпадают
 
     // Получение ключевого слова (первое слово в строке)
-    char* next_token = NULL;
-    char* keyword = strtok_s(command_copy, " ", &next_token);
+    char* saveptr = NULL;
+    char* keyword = strtok_r(command_copy, " ", &saveptr);
 
     if (keyword == NULL) {
         fprintf(output, "incorrect command\n");
         fclose(input);
         fclose(output);
-        system("pause");
+        #ifdef _WIN32
+            system("pause");
+        #endif
         return 1;
     }
 
     // Обработка команды get_c
     if (strcmp(keyword, "get_c") == 0) {
         char args_copy[256];
-        strcpy_s(args_copy, sizeof(args_copy), command);
+        strcpy(args_copy, command);
 
         Get_C_argument args = parse_get_c(args_copy);
 
@@ -506,7 +520,7 @@ int main() {
     // Обработка команды get_a
     else if (strcmp(keyword, "get_a") == 0) {
         char args_copy[256];
-        strcpy_s(args_copy, sizeof(args_copy), command);
+        strcpy(args_copy, command);
 
         Get_A_argument args = parse_get_a(args_copy);
 
@@ -521,7 +535,7 @@ int main() {
     // Обработка команды lcg
     else if (strcmp(keyword, "lcg") == 0) {
         char args_copy[256];
-        strcpy_s(args_copy, sizeof(args_copy), command);
+        strcpy(args_copy, command);
 
         LCG_argument args = parse_lcg(args_copy);
 
