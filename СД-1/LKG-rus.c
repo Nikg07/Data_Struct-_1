@@ -6,8 +6,8 @@
 
 // Переносимость: для Windows используем strtok_s как strtok_r
 #ifdef _WIN32
-    #include <windows.h>
-    #define strtok_r strtok_s
+#include <windows.h>
+#define strtok_r strtok_s
 #else
     // На Unix-подобных системах strtok_r доступен в string.h
 #endif
@@ -46,6 +46,7 @@ typedef struct LCG_argument {
     int valid;              // флаг корректности аргументов
 } LCG_argument;
 
+// Структура для хранения типов покерных комбинаций
 typedef enum {
     ZERO,
     PAIR,
@@ -55,6 +56,14 @@ typedef enum {
     QUADS,
     POKER
 } Type_of_hand;
+
+// Структура для результата поиска периода
+typedef struct {
+    unsigned long long period;      // найденный период
+    unsigned long long lambda;      // длина цикла
+    unsigned long long mu;          // длина предпериода (сколько шагов до входа в цикл)
+    int found;                      // найден ли период (1 - да, 0 - нет)
+} PeriodResult;
 
 //=============================================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -69,6 +78,9 @@ unsigned long long nod(unsigned long long a, unsigned long long b) {
     }
     return b;
 }
+
+
+
 
 // Проверка числа на простоту
 int is_prime(unsigned long long n) {
@@ -85,6 +97,9 @@ int is_prime(unsigned long long n) {
     }
     return 1;  // делителей не найдено - число простое
 }
+
+
+
 
 // Нахождение всех простых делителей числа. Возвращает количество найденных делителей
 int get_prime_divider(unsigned long long n, unsigned long long* factors, int max_factors) {
@@ -128,8 +143,12 @@ int get_prime_divider(unsigned long long n, unsigned long long* factors, int max
     return count;
 }
 
+
+
+
+
 // Компаратор для сортировки unsigned long long по возрастанию
-int cmp_ull(const void *a, const void *b) {
+int cmp_ull(const void* a, const void* b) {
     unsigned long long aa = *(unsigned long long*)a;
     unsigned long long bb = *(unsigned long long*)b;
     if (aa < bb) return -1;
@@ -137,12 +156,19 @@ int cmp_ull(const void *a, const void *b) {
     return 0;
 }
 
+
+
+
+
 // Компаратор для сортировки int по убыванию
-int cmp_int_desc(const void *a, const void *b) {
+int cmp_int_desc(const void* a, const void* b) {
     int aa = *(int*)a;
     int bb = *(int*)b;
     return bb - aa;
 }
+
+
+
 
 // Определение типа руки
 Type_of_hand hand_type(unsigned long long hand[5]) {
@@ -150,48 +176,52 @@ Type_of_hand hand_type(unsigned long long hand[5]) {
     for (int i = 0; i < 5; i++) {
         sorted[i] = hand[i];
     }
-    
+
     // Сортировка руки для простоты поиска одинаковых карт
     qsort(sorted, 5, sizeof(unsigned long long), cmp_ull);
-    
-    int counts[5] = {0};
+
+    int counts[5] = { 0 };
     int idx = 0;
     unsigned long long current = sorted[0];
     int cnt = 1;
-    
+
     // Поиск одинаковых чисел в отсортированной руке
     for (int i = 1; i < 5; i++) {
         if (sorted[i] == current) {
-            cnt++;
-        } else {
-            counts[idx++] = cnt;
-            current = sorted[i];
-            cnt = 1;
+            cnt++;// одинаковое число
+        }
+        else {
+            counts[idx++] = cnt; // сохранияем кол-во предыдущих
+            current = sorted[i]; // следующее число
+            cnt = 1;// сброс счетчика
         }
     }
-    
-    counts[idx++] = cnt;
-    
+
+    counts[idx++] = cnt; // сохранение последнего рукава
+
     qsort(counts, idx, sizeof(int), cmp_int_desc);
-    
+    // определение типа комбинации по паттерну
     if (idx == 1) {
-        return POKER;
+        return POKER; // все 5 одинаковые
     }
     if (idx == 2) {
-        return (counts[0] == 4) ? QUADS : FULL_HOUSE;
+        return (counts[0] == 4) ? QUADS : FULL_HOUSE;// 4+1 или 3+2
     }
     if (idx == 3) {
-        return (counts[0] == 3) ? SET : TWO_PAIRS;
+        return (counts[0] == 3) ? SET : TWO_PAIRS;// 3+1+1 или 2+2+1
     }
     if (idx == 4) {
-        return PAIR;
+        return PAIR;// 2+1+1+1
     }
     if (idx == 5) {
-        return ZERO;
+        return ZERO;// все разные
     }
-    
+
     return -1;
 }
+
+
+
 
 // Подсчет количества комбинаций
 int count_observed(unsigned long long* numbers, int total, int observed[7]) {
@@ -199,126 +229,137 @@ int count_observed(unsigned long long* numbers, int total, int observed[7]) {
     for (int i = 0; i < 7; i++) {
         observed[i] = 0;
     }
-    
+
     // Количество полных рук
     int num_hands = total / 5;
     if (num_hands == 0) return 0;
-    
+
     // Обрабатываем каждую руку формируя массив из 5
     for (int h = 0; h < num_hands; h++) {
         unsigned long long hand[5];
         for (int i = 0; i < 5; i++) {
             hand[i] = numbers[h * 5 + i];
         }
-        
+
         Type_of_hand type = hand_type(hand);
-        
+
         observed[type]++;
     }
-    
+
     return num_hands;
 }
 
+
+
+
 // Определение приблизительного количества вариантов чисел
 unsigned long long find_range(unsigned long long* numbers, int count,
-                              unsigned long long* min_val, unsigned long long* max_val) {
-    
+    unsigned long long* min_val, unsigned long long* max_val) {
+
     if (count == 0) return 0;
-    
+
     for (int i = 1; i < count; i++) {
         if (numbers[i] < *min_val) *min_val = numbers[i];
         if (numbers[i] > *max_val) *max_val = numbers[i];
     }
-    
+
     unsigned long long M = *max_val - *min_val + 1;
     return M;
 }
 
 
+// вычисление ожидаемых частот для покер-теста
 void compute_expected(unsigned long long M, int num_hands, double expected[7]) {
     // Общее количество возможных упорядоченных пятёрок
     double total_outcomes = pow((double)M, 5.0);
-    
+
     // Для удобства вычислим все необходимые биномиальные коэффициенты
     double C_M_5, C_M_4, C_M_3, C_M_2, C_M_1;
     double C_Mminus1_3, C_Mminus1_2, C_Mminus2_1;
-    
+
     // Вычисляем сочетания (используем формулы, чтобы избежать переполнения)
     if (M >= 5) {
-        C_M_5 = (double)M * (M-1) * (M-2) * (M-3) * (M-4) / 120.0;
-    } else {
+        C_M_5 = (double)M * (M - 1) * (M - 2) * (M - 3) * (M - 4) / 120.0;
+    }
+    else {
         C_M_5 = 0.0;
     }
-    
+
     // C(M,4) = M*(M-1)*(M-2)*(M-3)/24
     if (M >= 4) {
-        C_M_4 = (double)M * (M-1) * (M-2) * (M-3) / 24.0;
-    } else {
+        C_M_4 = (double)M * (M - 1) * (M - 2) * (M - 3) / 24.0;
+    }
+    else {
         C_M_4 = 0.0;
     }
-    
+
     // C(M,3) = M*(M-1)*(M-2)/6
     if (M >= 3) {
-        C_M_3 = (double)M * (M-1) * (M-2) / 6.0;
-    } else {
+        C_M_3 = (double)M * (M - 1) * (M - 2) / 6.0;
+    }
+    else {
         C_M_3 = 0.0;
     }
-    
+
     // C(M,2) = M*(M-1)/2
     if (M >= 2) {
-        C_M_2 = (double)M * (M-1) / 2.0;
-    } else {
+        C_M_2 = (double)M * (M - 1) / 2.0;
+    }
+    else {
         C_M_2 = 0.0;
     }
-    
+
     // C(M,1) = M
     C_M_1 = (double)M;
-    
+
     // C(M-1,3)
-    if (M-1 >= 3) {
-        C_Mminus1_3 = (double)(M-1) * (M-2) * (M-3) / 6.0;
-    } else {
+    if (M - 1 >= 3) {
+        C_Mminus1_3 = (double)(M - 1) * (M - 2) * (M - 3) / 6.0;
+    }
+    else {
         C_Mminus1_3 = 0.0;
     }
-    
+
     // C(M-1,2)
-    if (M-1 >= 2) {
-        C_Mminus1_2 = (double)(M-1) * (M-2) / 2.0;
-    } else {
+    if (M - 1 >= 2) {
+        C_Mminus1_2 = (double)(M - 1) * (M - 2) / 2.0;
+    }
+    else {
         C_Mminus1_2 = 0.0;
     }
-    
+
     // C(M-2,1) = M-2, только для версий M >= 3
     if (M >= 3) {
-        C_Mminus2_1 = (double)(M-2);
-    } else {
+        C_Mminus2_1 = (double)(M - 2);
+    }
+    else {
         C_Mminus2_1 = 0.0;
     }
-    
+
     // Количество исходов для каждого типа
     double counts[7];
-    
+
     // zero
     counts[0] = C_M_5 * 120.0;  // 5! = 120
-    
+
     // pair
     counts[1] = C_M_1 * C_Mminus1_3 * (120.0 / 2.0); // 5!/2! = 120/2 = 60
-    
+
     // two pairs
     counts[2] = C_M_2 * C_Mminus2_1 * (120.0 / (2.0 * 2.0)); // 5!/(2!2!) = 120/4 = 30
-    
+
     // set
     counts[3] = C_M_1 * C_Mminus1_2 * (120.0 / 6.0); // 5!/3! = 120/6 = 20
-    
+
     // full-house
-    counts[4] = C_M_1 * (M-1) * (120.0 / (6.0 * 2.0)); // 5!/(3!2!) = 120/(6*2)=120/12=10
-    
+    counts[4] = C_M_1 * (M - 1) * (120.0 / (6.0 * 2.0)); // 5!/(3!2!) = 120/(6*2)=120/12=10
+
     // quads
-    counts[5] = C_M_1 * (M-1) * (120.0 / 24.0); // 5!/4! = 120/24 = 5
-    
+    counts[5] = C_M_1 * (M - 1) * (120.0 / 24.0); // 5!/4! = 120/24 = 5
+
     // poker
     counts[6] = C_M_1;  // 5!/5! = 1
-    
+
     // Вычисление вероятности и ожидаемых частотот
     for (int i = 0; i < 7; i++) {
         double prob = counts[i] / total_outcomes;
@@ -334,6 +375,101 @@ void free_get_c_result(Get_C_result* result) {
         result->count = 0;
         result->error = 0;
     }
+}
+
+//=============================================================================
+// ОПРЕДЕЛЕНИЯ ПЕРИОДА ПОСЛЕДОВАТЕЛЬНОСТИ
+
+
+
+// Алгоритм Флойда для поиска цикла в последовательности
+PeriodResult find_sequence_period(unsigned long long* numbers, int count) {
+
+    PeriodResult result = { 0, 0, 0, 0 };
+
+    if (count < 2) {
+        return result;
+    }
+
+    // Шаг 1: Поиск точки встречи (алгоритм "черепаха и заяц")
+    int tortoise = 0;
+    int hare = 1;
+    int steps = 0;
+    int max_steps = count;
+
+    // Ищем первое совпадение значений
+    while (tortoise < count && hare < count && steps < max_steps) {
+        if (numbers[tortoise] == numbers[hare]) {
+            // Нашли потенциальное начало цикла
+            break;
+        }
+        tortoise++;
+        hare += 2;
+        steps++;
+    }
+
+    if (tortoise >= count || hare >= count || numbers[tortoise] != numbers[hare]) {
+        // Пробуем другой подход - ищем повтор первого элемента
+        for (int i = 1; i < count; i++) {
+            if (numbers[i] == numbers[0]) {
+                // Нашли повтор первого элемента - возможно это начало цикла
+                tortoise = 0;
+                hare = i;
+                break;
+            }
+        }
+        if (tortoise != 0 || hare == 0) {
+            return result;
+        }
+    }
+
+    // Шаг 2: Нахождение длины предпериода (mu)
+    int mu = 0;
+    int ptr1 = 0;
+    int ptr2 = hare;
+
+    while (ptr1 < count && ptr2 < count && ptr1 < ptr2 && numbers[ptr1] == numbers[ptr2]) {
+        ptr1++;
+        ptr2++;
+        mu++;
+    }
+
+    // Шаг 3: Нахождение длины цикла (lambda)
+    int lambda = 1;
+    int start = mu;
+    int current = mu + 1;
+
+    // Ищем, когда значение повторится
+    while (current < count) {
+        if (numbers[current] == numbers[start]) {
+            // Проверяем, что это действительно цикл
+            int is_cycle = 1;
+            for (int k = 0; k < lambda && start + k < count && current + k < count; k++) {
+                if (numbers[start + k] != numbers[current + k]) {
+                    is_cycle = 0;
+                    break;
+                }
+            }
+            if (is_cycle) {
+                break;
+            }
+        }
+        current++;
+        lambda++;
+        if (current >= count) {
+            lambda = 0;
+            break;
+        }
+    }
+
+    if (lambda > 0 && start + lambda <= count) {
+        result.mu = mu;
+        result.lambda = lambda;
+        result.period = lambda;  // Период - это длина цикла
+        result.found = 1;
+    }
+
+    return result;
 }
 
 //=============================================================================
@@ -391,6 +527,8 @@ Get_C_argument parse_get_c(char* command) {
     return args;
 }
 
+
+
 // Парсинг команды get_a из строки
 Get_A_argument parse_get_a(char* command) {
     Get_A_argument args = { 0, 0 };
@@ -430,6 +568,9 @@ Get_A_argument parse_get_a(char* command) {
     if (args.m > 0) args.valid = 1;
     return args;
 }
+
+
+
 
 // Парсинг команды lcg из строки
 LCG_argument parse_lcg(char* command) {
@@ -473,12 +614,15 @@ LCG_argument parse_lcg(char* command) {
 
     // Проверка, что все аргументы найдены
     // (значения могут быть 0, поэтому проверяем только наличие)
-    if (args.a >= 0 && args.x0 >= 0 && args.c >= 0 && args.m > 0 && args.n >= 0 ) {
+    if (args.a >= 0 && args.x0 >= 0 && args.c >= 0 && args.m > 0 && args.n >= 0) {
         args.valid = 1;
     }
 
     return args;
 }
+
+
+
 
 // Парсинг команды test с возвратом массива чисел
 unsigned long long* parse_test(char* command, int* out_count) {
@@ -536,21 +680,21 @@ unsigned long long* parse_test(char* command, int* out_count) {
     unsigned long long value = 0;
 
     while (fscanf(test_file, "%llu", &value) == 1) {
-           // Увеличение размера если количество больше
-           if (count >= capacity) {
-               capacity *= 2;
-               unsigned long long* new_arr = (unsigned long long*)realloc(num_arr, capacity * sizeof(unsigned long long));
-               if (!new_arr) {
-                   free(num_arr);
-                   fclose(test_file);
-                   return NULL;
-               }
-               num_arr = new_arr;
-           }
-           num_arr[count++] = value;
-       }
-       
-    
+        // Увеличение размера если количество больше
+        if (count >= capacity) {
+            capacity *= 2;
+            unsigned long long* new_arr = (unsigned long long*)realloc(num_arr, capacity * sizeof(unsigned long long));
+            if (!new_arr) {
+                free(num_arr);
+                fclose(test_file);
+                return NULL;
+            }
+            num_arr = new_arr;
+        }
+        num_arr[count++] = value;
+    }
+
+
     fclose(test_file);
     *out_count = count;
     return num_arr;
@@ -607,6 +751,9 @@ Get_C_result get_c(unsigned long long cmin, unsigned long long cmax, unsigned lo
     return result;
 }
 
+
+
+
 // Функция get_a - находит минимальное a, удовлетворяющее теореме о максимальном периоде
 unsigned long long get_a(unsigned long long m) {
     if (m <= 1) return 0;  // нет решения для m <= 1
@@ -644,6 +791,9 @@ unsigned long long get_a(unsigned long long m) {
     return 0;  // решение не найдено
 }
 
+
+
+
 // Функция lcg - генерирует последовательность псевдослучайных чисел
 // Возвращает 1 при успехе, 0 при ошибке
 int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
@@ -666,16 +816,21 @@ int lcg(unsigned long long a, unsigned long long x0, unsigned long long c,
     return 1;  // успешно
 }
 
+
+
+
+
+// Функция poker_test с определением периода
 int poker_test(unsigned long long* numbers, int num_count,
-                int observed[7], double expected[7], FILE* poker_test_f) {
-    
+    int observed[7], double expected[7], FILE* poker_test_f) {
+
     unsigned long long min_val = numbers[0];
     unsigned long long max_val = numbers[0];
-    
+
     // Вычисление M
     unsigned long long M = find_range(numbers, num_count, &min_val, &max_val);
     fprintf(poker_test_f, "Диапазон значений: от %llu до %llu, M = %llu\n", min_val, max_val, M);
-    
+
     // Подсчёт наблюдаемых частот
     int num_hands = count_observed(numbers, num_count, observed);
     if (num_hands == 0) {
@@ -683,14 +838,37 @@ int poker_test(unsigned long long* numbers, int num_count,
         free(numbers);
         return 0;
     }
-    
+
     fprintf(poker_test_f, "Количество полных рук (по 5 чисел): %d\n", num_hands);
-    
+
     // Вычисление ожидаемых частот
     compute_expected(M, num_hands, expected);
-    
+
+    // ДОБАВЛЕНО: определение периода последовательности
+    fprintf(poker_test_f, "\n========== АНАЛИЗ ПЕРИОДА ==========\n");
+    PeriodResult period_result = find_sequence_period(numbers, num_count);
+
+    if (period_result.found) {
+        fprintf(poker_test_f, "Период: %llu\n", period_result.period);
+
+        // Сравнение с M
+        if (period_result.period > M) {
+            fprintf(poker_test_f, "период больше m\n");
+        }
+        else if (period_result.period < M) {
+            fprintf(poker_test_f, "период меньше m\n");
+        }
+        else {
+            fprintf(poker_test_f, "период равен m\n");
+        }
+    }
+    else {
+        fprintf(poker_test_f, "Период не найден (последовательность не зациклилась в пределах %d чисел)\n", num_count);
+    }
+    fprintf(poker_test_f, "====================================\n\n");
+
     free(numbers);
-    
+
     return num_hands;
 }
 
@@ -715,6 +893,8 @@ void write_get_c_result(FILE* output, Get_C_result result) {
     fprintf(output, "\n");
 }
 
+
+
 // Запись результата get_a в файл
 void write_get_a_result(FILE* output, unsigned long long a) {
     if (a == 0) {
@@ -724,6 +904,9 @@ void write_get_a_result(FILE* output, unsigned long long a) {
         fprintf(output, "%llu\n", a);
     }
 }
+
+
+
 
 // Запись результата lcg в файл
 void write_lcg_result(FILE* output, unsigned long long* results, unsigned long long n, int success) {
@@ -742,13 +925,17 @@ void write_lcg_result(FILE* output, unsigned long long* results, unsigned long l
     fprintf(output, "\n");
 }
 
+
+
+
+// вывод покер-теста в отдельный файл
 void write_poker_test_result(int observed[7], double expected[7], int num_hands, FILE* poker_test_f) {
     double chi2 = 0.0;
-    
+
     fprintf(poker_test_f, "\n========== РЕЗУЛЬТАТЫ ТЕСТА ПОКЕРА ==========\n");
     fprintf(poker_test_f, "Тип комбинации   | Наблюдаемые | Ожидаемые  | (O-E)^2/E\n");
     fprintf(poker_test_f, "-----------------+-------------+------------+-----------\n");
-    
+
     char* type_names[7] = {
         "Все разные",
         "Одна пара ",
@@ -758,74 +945,76 @@ void write_poker_test_result(int observed[7], double expected[7], int num_hands,
         "Каре      ",
         "Покер     "
     };
-    
+
     for (int i = 0; i < 7; i++) {
         double diff = observed[i] - expected[i];
         double term = (diff * diff) / expected[i];
         chi2 += term;
-        
+
         fprintf(poker_test_f, "%s | %11d | %10.2f | %10.4f\n",
-               type_names[i], observed[i], expected[i], term);
+            type_names[i], observed[i], expected[i], term);
     }
-    
+
     fprintf(poker_test_f, "------------------------------------------------\n");
     fprintf(poker_test_f, "ХИ-КВАДРАТ = %.4f\n", chi2);
     fprintf(poker_test_f, "Степени свободы = 6\n");
-    
+
     // Критические значения для 6 степеней свободы (таблица хи-квадрат)
     double critical_005 = 12.59;
     double critical_001 = 16.81;
-    
+
     fprintf(poker_test_f, "\nВЫВОД О СЛУЧАЙНОСТИ:\n");
     if (chi2 < critical_005) {
         fprintf(poker_test_f, "✓ Последовательность ПРОШЛА тест покера (p > 0.05).\n");
         fprintf(poker_test_f, "  Распределение комбинаций близко к случайному.\n");
-    } else if (chi2 < critical_001) {
+    }
+    else if (chi2 < critical_001) {
         fprintf(poker_test_f, "⚠ Последовательность ПРОШЛА тест с уровнем значимости 0.01 < p < 0.05.\n");
         fprintf(poker_test_f, "  Имеются умеренные отклонения от случайности.\n");
-    } else {
+    }
+    else {
         fprintf(poker_test_f, "✗ Последовательность НЕ ПРОШЛА тест покера (p < 0.01).\n");
         fprintf(poker_test_f, "  Распределение комбинаций значимо отличается от случайного.\n");
     }
     fprintf(poker_test_f, "==============================================\n");
 }
 
-//=============================================================================
+
+
 
 
 //=============================================================================
-
 int main(void) {
-    #ifdef _WIN32
-        SetConsoleOutputCP(1251);
-    #endif
+#ifdef _WIN32
+    SetConsoleOutputCP(1251);
+#endif
 
     // Открытие входного файла
     FILE* input = fopen("input.txt", "r");
     if (input == NULL) {
         printf("Ошибка: не могу открыть input.txt\n");
-        #ifdef _WIN32
-            system("pause");
-        #endif
+#ifdef _WIN32
+        system("pause");
+#endif
         return 1;
     }
 
     // Чтение команды из файла
-    char command[256] = {0};
+    char command[256] = { 0 };
     if (fgets(command, sizeof(command), input) == NULL) {
         printf("Ошибка: файл input.txt пуст\n");
-        
+
         // Открываем output для записи ошибки
         FILE* output = fopen("output.txt", "w");
         if (output != NULL) {
             fprintf(output, "incorrect command\n");
             fclose(output);
         }
-        
+
         fclose(input);
-        #ifdef _WIN32
-            system("pause");
-        #endif
+#ifdef _WIN32
+        system("pause");
+#endif
         return 1;
     }
 
@@ -850,9 +1039,9 @@ int main(void) {
             fclose(output);
         }
         fclose(input);
-        #ifdef _WIN32
-            system("pause");
-        #endif
+#ifdef _WIN32
+        system("pause");
+#endif
         return 1;
     }
 
@@ -863,12 +1052,12 @@ int main(void) {
         if (output == NULL) {
             printf("Ошибка: не могу открыть output.txt для записи\n");
             fclose(input);
-            #ifdef _WIN32
-                system("pause");
-            #endif
+#ifdef _WIN32
+            system("pause");
+#endif
             return 1;
         }
-        
+
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -882,7 +1071,7 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
-        
+
         fclose(output);
     }
     // Обработка команды get_a
@@ -892,12 +1081,12 @@ int main(void) {
         if (output == NULL) {
             printf("Ошибка: не могу открыть output.txt для записи\n");
             fclose(input);
-            #ifdef _WIN32
-                system("pause");
-            #endif
+#ifdef _WIN32
+            system("pause");
+#endif
             return 1;
         }
-        
+
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -910,7 +1099,7 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
-        
+
         fclose(output);
     }
     // Обработка команды lcg
@@ -920,12 +1109,12 @@ int main(void) {
         if (output == NULL) {
             printf("Ошибка: не могу открыть output.txt для записи\n");
             fclose(input);
-            #ifdef _WIN32
-                system("pause");
-            #endif
+#ifdef _WIN32
+            system("pause");
+#endif
             return 1;
         }
-        
+
         char args_copy[256];
         strcpy(args_copy, command);
 
@@ -946,7 +1135,7 @@ int main(void) {
         else {
             fprintf(output, "incorrect command\n");
         }
-        
+
         fclose(output);
     }
     // Обработка команды test
@@ -962,34 +1151,36 @@ int main(void) {
                 fprintf(output, "incorrect command\n");
                 fclose(output);
             }
-            
+
             fclose(input);
-            #ifdef _WIN32
-                system("pause");
-            #endif
+#ifdef _WIN32
+            system("pause");
+#endif
             return 1;
         }
-        
+
         int num_count = 0;
-        int observed[7] = {0};
-        double expected[7] = {0.0};
-        
+        int observed[7] = { 0 };
+        double expected[7] = { 0.0 };
+
         // Функция parse_test должна быть модифицирована для чтения из файла
         // или создана новая функция parse_test_from_file
         unsigned long long* numbers = parse_test(command, &num_count);
-        
+
         if (numbers != NULL && num_count > 0) {
             int num_hands = poker_test(numbers, num_count, observed, expected, poker_test_f);
-            
+
             if (num_hands > 0) {
                 write_poker_test_result(observed, expected, num_hands, poker_test_f);
-            } else {
+            }
+            else {
                 fprintf(poker_test_f, "incorrect work\n");
             }
-        } else {
+        }
+        else {
             fprintf(poker_test_f, "incorrect command\n");
         }
-        
+
         fclose(poker_test_f);
     }
     // Неизвестная команда
@@ -1004,9 +1195,9 @@ int main(void) {
     // Закрытие входного файла
     fclose(input);
 
-    #ifdef _WIN32
-        system("pause");
-    #endif
-    
+#ifdef _WIN32
+    system("pause");
+#endif
+
     return 0;
 }

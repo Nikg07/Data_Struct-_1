@@ -19,4 +19,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="poker_test.txt" />
+    <Text Include="output.txt" />
+    <Text Include="input.txt" />
+  </ItemGroup>
 </Project>
